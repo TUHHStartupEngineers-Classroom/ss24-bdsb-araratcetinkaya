@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Joschka Schwarz">
+<meta name="author" content="Ararat Çetinkaya">
 
 <title>MyLabJournal - Data Acquisition</title>
 <style>
@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -43,6 +77,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -70,6 +107,10 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<link href="../../site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet">
+
+<script src="../../site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
 
 
 </head>
@@ -156,7 +197,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Joschka Schwarz </p>
+             <p>Ararat Çetinkaya </p>
           </div>
   </div>
     
@@ -169,21 +210,168 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># 1.0 Load libraries ----</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(httr)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">library</span>(jsonlite)</span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="fu">library</span>(keyring)</span>
+<span id="cb1-8"><a href="#cb1-8"></a></span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="co"># I get an error while building the website because this key</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="co">#So, I am commenting it.</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="co"># keyring::key_set("token")</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="co"># GET(alphavantage_api_url, query = list('function' = "GLOBAL_QUOTE",</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="co">#                                        symbol     = ticker,</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#                                        apikey     = key_get("token")))</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="co">#     </span></span>
+<span id="cb1-17"><a href="#cb1-17"></a><span class="co">#     </span></span>
+<span id="cb1-18"><a href="#cb1-18"></a></span>
+<span id="cb1-19"><a href="#cb1-19"></a></span>
+<span id="cb1-20"><a href="#cb1-20"></a><span class="co">#API for last 24h prices of the Crypto Currencies in Binance.</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a>resp <span class="ot">&lt;-</span> <span class="fu">GET</span>(<span class="st">"https://api2.binance.com/api/v3/ticker/24hr"</span>)</span>
+<span id="cb1-22"><a href="#cb1-22"></a></span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a>criptoData_tbl <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">rawToChar</span>(resp<span class="sc">$</span>content))</span>
+<span id="cb1-25"><a href="#cb1-25"></a></span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="fu">names</span>(criptoData_tbl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt;  [1] "symbol"             "priceChange"        "priceChangePercent"
+#&gt;  [4] "weightedAvgPrice"   "prevClosePrice"     "lastPrice"         
+#&gt;  [7] "lastQty"            "bidPrice"           "bidQty"            
+#&gt; [10] "askPrice"           "askQty"             "openPrice"         
+#&gt; [13] "highPrice"          "lowPrice"           "volume"            
+#&gt; [16] "quoteVolume"        "openTime"           "closeTime"         
+#&gt; [19] "firstId"            "lastId"             "count"</code></pre>
 </div>
-<div class="callout-title-container flex-fill">
-Note
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>criptoData_wrangled_tbl <span class="ot">&lt;-</span> criptoData_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>  </span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">select</span>(symbol, lastPrice, <span class="fu">contains</span>(<span class="st">"Change"</span>), prevClosePrice, openPrice, highPrice, lowPrice, volume) <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>  </span>
+<span id="cb3-5"><a href="#cb3-5"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(priceChangePercent )) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>  </span>
+<span id="cb3-7"><a href="#cb3-7"></a>  <span class="fu">as_tibble</span>()</span>
+<span id="cb3-8"><a href="#cb3-8"></a></span>
+<span id="cb3-9"><a href="#cb3-9"></a>criptoData_wrangled_10_tbl <span class="ot">&lt;-</span> <span class="fu">slice_max</span>(criptoData_wrangled_tbl,priceChangePercent,<span class="at">n=</span> <span class="dv">10</span>)</span>
+<span id="cb3-10"><a href="#cb3-10"></a></span>
+<span id="cb3-11"><a href="#cb3-11"></a>criptoData_wrangled_10_tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["symbol"],"name":[1],"type":["chr"],"align":["left"]},{"label":["lastPrice"],"name":[2],"type":["chr"],"align":["left"]},{"label":["priceChange"],"name":[3],"type":["chr"],"align":["left"]},{"label":["priceChangePercent"],"name":[4],"type":["chr"],"align":["left"]},{"label":["prevClosePrice"],"name":[5],"type":["chr"],"align":["left"]},{"label":["openPrice"],"name":[6],"type":["chr"],"align":["left"]},{"label":["highPrice"],"name":[7],"type":["chr"],"align":["left"]},{"label":["lowPrice"],"name":[8],"type":["chr"],"align":["left"]},{"label":["volume"],"name":[9],"type":["chr"],"align":["left"]}],"data":[{"1":"WNXMUSDT","2":"79.20000000","3":"6.95000000","4":"9.619","5":"72.25000000","6":"72.25000000","7":"82.07000000","8":"72.25000000","9":"27697.48000000"},{"1":"ETHFIBTC","2":"0.00006006","3":"0.00000523","4":"9.539","5":"0.00005472","6":"0.00005483","7":"0.00006230","8":"0.00005452","9":"262998.20000000"},{"1":"ETHFIFDUSD","2":"4.18600000","3":"0.36300000","4":"9.495","5":"3.80500000","6":"3.82300000","7":"4.35900000","8":"3.79900000","9":"464193.60000000"},{"1":"ARBBTC","2":"0.00001691","3":"0.00000146","4":"9.450","5":"0.00001544","6":"0.00001545","7":"0.00001744","8":"0.00001540","9":"2915584.80000000"},{"1":"ETHFIUSDT","2":"4.18000000","3":"0.35900000","4":"9.395","5":"3.82000000","6":"3.82100000","7":"4.36200000","8":"3.78400000","9":"35544222.90000000"},{"1":"REZBNB","2":"0.00021330","3":"0.00001830","4":"9.385","5":"0.00019500","6":"0.00019500","7":"0.00022490","8":"0.00019490","9":"1288613.00000000"},{"1":"ETHFITRY","2":"134.05000000","3":"11.38000000","4":"9.277","5":"122.77000000","6":"122.67000000","7":"139.11000000","8":"121.71000000","9":"1746213.80000000"},{"1":"LRCUSDT","2":"0.29440000","3":"0.02490000","4":"9.239","5":"0.26930000","6":"0.26950000","7":"0.30550000","8":"0.26770000","9":"33558684.00000000"},{"1":"ARBTUSD","2":"1.17720000","3":"0.09890000","4":"9.172","5":"1.07630000","6":"1.07830000","7":"1.23360000","8":"1.07040000","9":"115237.10000000"},{"1":"LRCTRY","2":"9.44300000","3":"0.79300000","4":"9.168","5":"8.64600000","6":"8.65000000","7":"9.75000000","8":"8.63400000","9":"1303384.30000000"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
 </div>
 </div>
-<div class="callout-body-container callout-body">
-<p>You can delete everything in here and start fresh.</p>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># Visualization  ----</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a></span>
+<span id="cb4-3"><a href="#cb4-3"></a>criptoData_wrangled_10_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>  </span>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> symbol, <span class="at">y =</span> priceChangePercent)) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>  </span>
+<span id="cb4-7"><a href="#cb4-7"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"#2DC6D6"</span>) <span class="sc">+</span> <span class="co"># Use geom_col for a bar plot</span></span>
+<span id="cb4-8"><a href="#cb4-8"></a>  </span>
+<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">labs</span>(</span>
+<span id="cb4-10"><a href="#cb4-10"></a>    <span class="at">title    =</span> <span class="st">"Latest Crypto Changes"</span>,</span>
+<span id="cb4-11"><a href="#cb4-11"></a>    <span class="at">x =</span> <span class="st">""</span>, <span class="co"># Override defaults for x and y</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a>    <span class="at">y =</span> <span class="st">"Change Percantage"</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="02_data_acquisition_files/figure-html/unnamed-chunk-1-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="02_data_acquisition_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="challenge-2--" class="level3">
+<h3 class="anchored" data-anchor-id="challenge-2--">Challenge 2 ————————————-</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># 1.0 Libraries ----</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="fu">library</span>(tidyverse) <span class="co"># Main Package - Loads dplyr, purrr, etc.</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="fu">library</span>(rvest)     <span class="co"># HTML Hacking &amp; Web Scraping</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="fu">library</span>(xopen)     <span class="co"># Quickly opening URLs</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="fu">library</span>(jsonlite)  <span class="co"># converts JSON files to R objects</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="fu">library</span>(glue)      <span class="co"># concatenate strings</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="fu">library</span>(stringi)   <span class="co"># character string/text processing</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb5-10"><a href="#cb5-10"></a></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co"># 1.1 Collecting Product Data ----</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="co"># MTB Style bikes and prices.</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a></span>
+<span id="cb5-14"><a href="#cb5-14"></a>url_home          <span class="ot">&lt;-</span> <span class="st">"https://www.rosebikes.com/bikes/mtb"</span></span>
+<span id="cb5-15"><a href="#cb5-15"></a></span>
+<span id="cb5-16"><a href="#cb5-16"></a>html_home         <span class="ot">&lt;-</span> <span class="fu">read_html</span>(url_home)</span>
+<span id="cb5-17"><a href="#cb5-17"></a></span>
+<span id="cb5-18"><a href="#cb5-18"></a>bike_mtb_model_char <span class="ot">&lt;-</span> html_home <span class="sc">%&gt;%</span></span>
+<span id="cb5-19"><a href="#cb5-19"></a>  </span>
+<span id="cb5-20"><a href="#cb5-20"></a>  <span class="fu">html_nodes</span>(<span class="at">css =</span> <span class="st">".large-4 .basic-headline__title"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-21"><a href="#cb5-21"></a>  <span class="fu">html_text2</span>()</span>
+<span id="cb5-22"><a href="#cb5-22"></a></span>
+<span id="cb5-23"><a href="#cb5-23"></a></span>
+<span id="cb5-24"><a href="#cb5-24"></a>bike_mtb_model_tbl <span class="ot">&lt;-</span> bike_mtb_model_char <span class="sc">%&gt;%</span> </span>
+<span id="cb5-25"><a href="#cb5-25"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-26"><a href="#cb5-26"></a>  <span class="fu">rename</span>(<span class="st">"BikeModel"</span> <span class="ot">=</span> <span class="st">"value"</span>)</span>
+<span id="cb5-27"><a href="#cb5-27"></a></span>
+<span id="cb5-28"><a href="#cb5-28"></a>bike_mtb_model_tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["BikeModel"],"name":[1],"type":["chr"],"align":["left"]}],"data":[{"1":"PDQ"},{"1":"COUNT SOLO"},{"1":"THRILL HILL"},{"1":"GROUND CONTROL"},{"1":"ROOT MILLER"},{"1":"BONERO"},{"1":"SCRUB"},{"1":"THE BRUCE"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>bike_mtb_price_char <span class="ot">&lt;-</span> html_home <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>  </span>
+<span id="cb6-3"><a href="#cb6-3"></a>  <span class="fu">html_nodes</span>(<span class="at">css =</span> <span class="st">".catalog-category-bikes__price-title"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a>  <span class="fu">html_text2</span>()</span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a>bike_mtb_price_tbl <span class="ot">&lt;-</span> <span class="fu">parse_number</span>(bike_mtb_price_char) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-7"><a href="#cb6-7"></a>  <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>  <span class="fu">rename</span>(<span class="st">"BikePriceInEuros"</span> <span class="ot">=</span> <span class="st">"value"</span>)</span>
+<span id="cb6-9"><a href="#cb6-9"></a></span>
+<span id="cb6-10"><a href="#cb6-10"></a>bike_mtb_price_tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["BikePriceInEuros"],"name":[1],"type":["dbl"],"align":["right"]}],"data":[{"1":"2699"},{"1":"499"},{"1":"2299"},{"1":"1499"},{"1":"1799"},{"1":"999"},{"1":"3299"},{"1":"799"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>bike_mtb_tbl <span class="ot">&lt;-</span> <span class="fu">tibble</span>(bike_mtb_model_tbl, bike_mtb_price_tbl) <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">arrange</span>(BikePriceInEuros)</span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
+<span id="cb7-4"><a href="#cb7-4"></a>meanPrice <span class="ot">&lt;-</span> <span class="fu">mean</span>(bike_mtb_price_tbl<span class="sc">$</span>BikePriceInEuros)</span>
+<span id="cb7-5"><a href="#cb7-5"></a></span>
+<span id="cb7-6"><a href="#cb7-6"></a>meanPrice</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 1736.5</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>bike_mtb_tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div data-pagedtable="false">
+  <script data-pagedtable-source="" type="application/json">
+{"columns":[{"label":["BikeModel"],"name":[1],"type":["chr"],"align":["left"]},{"label":["BikePriceInEuros"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"COUNT SOLO","2":"499"},{"1":"THE BRUCE","2":"799"},{"1":"BONERO","2":"999"},{"1":"GROUND CONTROL","2":"1499"},{"1":"ROOT MILLER","2":"1799"},{"1":"THRILL HILL","2":"2299"},{"1":"PDQ","2":"2699"},{"1":"SCRUB","2":"3299"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>bike_mtb_tbl <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> BikeModel, <span class="at">y =</span> BikePriceInEuros)) <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"slateblue4"</span>)<span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a>  <span class="fu">geom_label</span>(<span class="fu">aes</span>(<span class="at">label =</span> BikePriceInEuros))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="02_data_acquisition_files/figure-html/unnamed-chunk-2-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="02_data_acquisition_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
 </div>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -740,6 +928,31 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","selector":".lightbox","descPosition":"bottom","openEffect":"zoom","loop":false});
+window.onload = () => {
+  lightboxQuarto.on('slide_before_load', (data) => {
+    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+    const href = trigger.getAttribute('href');
+    if (href !== null) {
+      const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+      if (imgEl !== null) {
+        const srcAttr = imgEl.getAttribute("src");
+        if (srcAttr && srcAttr.startsWith("data:")) {
+          slideConfig.href = srcAttr;
+        }
+      }
+    } 
+  });
+
+  lightboxQuarto.on('slide_after_load', (data) => {
+    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+    if (window.Quarto?.typesetMath) {
+      window.Quarto.typesetMath(slideNode);
+    }
+  });
+
+};
+          </script>
 
 
 
