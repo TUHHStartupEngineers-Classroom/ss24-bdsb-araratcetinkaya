@@ -1,0 +1,178 @@
+---
+title: "01 Intro to the tidyverse"
+author: "Joschka Schwarz"
+date: "2021-04"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+    collapsed: false
+    number_sections: true
+    toc_depth: 3
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
+```
+
+# Data Science at TUHH ------------------------------------------------------
+# Intro to Tidyverse Challenge ----
+
+``` {r}
+# 1.0 Load libraries ----
+
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(writexl)
+
+# 2.0 Importing Files ----
+
+bikes_tbl <- read_excel("C:/Users/arara/OneDrive/Belgeler/GitHub/ss24-bdsb-araratcetinkaya/01_tidyverse_files/ds_data/01_bike_sales/01_raw_data/bikes.xlsx")
+
+orderlines_tbl <- read_excel("C:/Users/arara/OneDrive/Belgeler/GitHub/ss24-bdsb-araratcetinkaya/01_tidyverse_files/ds_data/01_bike_sales/01_raw_data/orderlines.xlsx")
+
+bikeshops_tbl <- read_excel("C:/Users/arara/OneDrive/Belgeler/GitHub/ss24-bdsb-araratcetinkaya/01_tidyverse_files/ds_data/01_bike_sales/01_raw_data/bikeshops.xlsx")
+
+
+# 3.0 Examining Data ----
+
+glimpse(bikes_tbl)
+glimpse(orderlines_tbl)
+glimpse(bikeshops_tbl)
+
+# 4.0 Joining Data ----
+
+bike_orderlines_joined_tbl <- orderlines_tbl %>%
+  left_join(bikes_tbl, by = c("product.id" = "bike.id")) %>%
+  left_join(bikeshops_tbl, by = c("customer.id" = "bikeshop.id"))
+
+
+# 5.0 Wrangling Data ----
+
+bike_orderlines_wrangled_tbl <- bike_orderlines_joined_tbl %>%
+  
+  separate(col = location,
+           into = c("city", "state"),
+           sep = ", ") %>%
+  
+  mutate(total.price = price*quantity) %>%
+  
+  select(-...1, -gender, -model, -category, -ends_with(".id"), -order.line, -lat, -lng,-url, 
+         -frame.material, -model.year,-weight) %>%
+  
+  bind_cols(bike_orderlines_joined_tbl %>% select(order.id)) %>% 
+  
+  rename(bikeshop = name) %>%
+  
+  select(order.id, price, quantity, total.price, city, state, bikeshop, everything()) %>%
+  
+  set_names(names(.) %>% str_replace_all("\\.", "_"))
+
+
+# 6.0 Business Insights ----
+# 6.1 Sales by location ----
+
+# Step 1 - Manipulate
+
+sales_by_location_tbl <- bike_orderlines_wrangled_tbl %>%
+  
+  select(state, total_price) %>%
+  
+  group_by(state) %>% 
+  
+  summarize(sales = sum(total_price)) %>%
+  
+  mutate(sales_text = scales::dollar(sales, big.mark = ".", 
+                                     decimal.mark = ",", 
+                                     prefix = "", 
+                                     suffix = " €"))
+
+
+
+
+# Step 2 - Visualize
+
+sales_by_location_tbl %>%
+  
+  ggplot(aes(x = state, y = sales)) +
+  
+  geom_col(fill = "purple") + 
+  geom_label(aes(label = sales_text)) + 
+  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  
+  scale_y_continuous(labels = scales::dollar_format(big.mark = ".", 
+                                                    decimal.mark = ",", 
+                                                    prefix = "", 
+                                                    suffix = " €")) +
+  labs(
+    title    = "Revenue by State",
+    x = "", # Override defaults for x and y
+    y = "Revenue"
+  )
+  
+  
+# 6.2 Sales by location and year ----
+
+# Step 1 - Manipulate
+
+sales_by_location_year_tbl <- bike_orderlines_wrangled_tbl %>%
+  
+  select(state, total_price, order_date) %>%
+  
+  mutate(year = year(order_date)) %>%
+  
+  group_by(state, year) %>% 
+  
+  summarize(sales = sum(total_price)) %>%
+  
+  mutate(sales_text = scales::dollar(sales, big.mark = ".", 
+                                     decimal.mark = ",", 
+                                     prefix = "", 
+                                     suffix = " €"))
+
+
+
+# Step 2 - Visualize 
+
+sales_by_location_year_tbl %>%
+  
+  ggplot(aes(x = year, y = sales, fill = state)) +
+  
+  geom_col() + # Run up to here to get a stacked bar plot
+  
+  # Facet
+  facet_wrap(~ state) +
+  
+  # Formatting
+  scale_y_continuous(labels = scales::dollar_format(big.mark = ".", 
+                                                    decimal.mark = ",", 
+                                                    prefix = "", 
+                                                    suffix = " €")) +
+  labs(
+    title = "Revenue by year and state",
+    subtitle = "Some states have clearly higher sales",
+    fill = "States" # Changes the legend name
+  )
+
+
+# 7.0 Writing Files ----
+
+# 7.1 Excel ----
+
+bike_orderlines_wrangled_tbl %>%
+  write_xlsx("C:/Users/arara/OneDrive/Belgeler/GitHub/ss24-bdsb-araratcetinkaya/01_tidyverse_files/ds_data/01_bike_sales/02_wrangled_data/bike_orderlines_wrangled_tbl.xlsx")
+
+# 7.2 CSV ----
+bike_orderlines_wrangled_tbl %>% 
+  write_csv("C:/Users/arara/OneDrive/Belgeler/GitHub/ss24-bdsb-araratcetinkaya/01_tidyverse_files/ds_data/01_bike_sales/02_wrangled_data/bike_orderlines_wrangled_tbl.csv")
+
+# 7.3 RDS ----
+bike_orderlines_wrangled_tbl %>% 
+  write_rds("C:/Users/arara/OneDrive/Belgeler/GitHub/ss24-bdsb-araratcetinkaya/01_tidyverse_files/ds_data/01_bike_sales/02_wrangled_data/bike_orderlines_wrangled_tbl.rds")
+
+```
+
