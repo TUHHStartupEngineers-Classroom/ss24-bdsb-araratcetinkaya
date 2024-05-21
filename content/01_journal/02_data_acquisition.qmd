@@ -1,8 +1,119 @@
 ---
 title: "Data Acquisition"
-author: "Joschka Schwarz"
+author: "Ararat Çetinkaya"
 ---
 
-::: callout-note
-You can delete everything in here and start fresh.
-:::
+``` {r}
+# 1.0 Load libraries ----
+
+library(httr)
+library(jsonlite)
+library(tibble)
+library(tidyverse)
+library(keyring)
+
+# I get an error while building the website because this key
+#So, I am commenting it.
+
+# keyring::key_set("token")
+# GET(alphavantage_api_url, query = list('function' = "GLOBAL_QUOTE",
+#                                        symbol     = ticker,
+#                                        apikey     = key_get("token")))
+#     
+#     
+
+
+#API for last 24h prices of the Crypto Currencies in Binance.
+resp <- GET("https://api2.binance.com/api/v3/ticker/24hr")
+
+
+criptoData_tbl <- fromJSON(rawToChar(resp$content))
+
+names(criptoData_tbl)
+
+criptoData_wrangled_tbl <- criptoData_tbl %>%
+  
+  select(symbol, lastPrice, contains("Change"), prevClosePrice, openPrice, highPrice, lowPrice, volume) %>%
+  
+  arrange(desc(priceChangePercent )) %>%
+  
+  as_tibble()
+
+criptoData_wrangled_10_tbl <- slice_max(criptoData_wrangled_tbl,priceChangePercent,n= 10)
+
+criptoData_wrangled_10_tbl
+
+# Visualization  ----
+
+criptoData_wrangled_10_tbl %>%
+  
+  ggplot(aes(x = symbol, y = priceChangePercent)) +
+  
+  geom_col(fill = "#2DC6D6") + # Use geom_col for a bar plot
+  
+  labs(
+    title    = "Latest Crypto Changes",
+    x = "", # Override defaults for x and y
+    y = "Change Percantage"
+  )
+
+```
+### Challenge 2 -------------------------------------
+
+``` {r}
+# 1.0 Libraries ----
+
+library(tidyverse) # Main Package - Loads dplyr, purrr, etc.
+library(rvest)     # HTML Hacking & Web Scraping
+library(xopen)     # Quickly opening URLs
+library(jsonlite)  # converts JSON files to R objects
+library(glue)      # concatenate strings
+library(stringi)   # character string/text processing
+library(purrr)
+
+# 1.1 Collecting Product Data ----
+# MTB Style bikes and prices.
+
+url_home          <- "https://www.rosebikes.com/bikes/mtb"
+
+html_home         <- read_html(url_home)
+
+bike_mtb_model_char <- html_home %>%
+  
+  html_nodes(css = ".large-4 .basic-headline__title") %>%
+  html_text2()
+
+
+bike_mtb_model_tbl <- bike_mtb_model_char %>% 
+  as_tibble() %>%
+  rename("BikeModel" = "value")
+
+bike_mtb_model_tbl
+
+bike_mtb_price_char <- html_home %>%
+  
+  html_nodes(css = ".catalog-category-bikes__price-title") %>%
+  html_text2()
+
+bike_mtb_price_tbl <- parse_number(bike_mtb_price_char) %>% 
+  as_tibble() %>%
+  rename("BikePriceInEuros" = "value")
+
+bike_mtb_price_tbl
+
+bike_mtb_tbl <- tibble(bike_mtb_model_tbl, bike_mtb_price_tbl) %>%
+  arrange(BikePriceInEuros)
+
+meanPrice <- mean(bike_mtb_price_tbl$BikePriceInEuros)
+
+meanPrice
+
+bike_mtb_tbl
+
+
+bike_mtb_tbl %>%
+  ggplot(aes(x = BikeModel, y = BikePriceInEuros)) +
+  geom_col(fill = "slateblue4")+
+  geom_label(aes(label = BikePriceInEuros))
+
+```

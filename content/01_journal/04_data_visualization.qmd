@@ -1,8 +1,154 @@
 ---
 title: "Data Visualization"
-author: "Joschka Schwarz"
+author: "Ararat Çetinkaya"
 ---
 
-::: callout-note
-You can delete everything in here and start fresh.
-:::
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
+```
+
+
+``` {r}
+
+library(tidyverse)
+library(scales)
+library(ggplot2)
+##Data Acquisition ----
+
+covid_data_tbl <- read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+
+
+##Data Wrangling ----
+
+
+
+covid_data_general <- covid_data_tbl %>% 
+  
+  mutate(location = case_when(
+    
+    location == "United Kingdom" ~ "UK",
+    location == "United States" ~ "USA",
+    location == "Democratic Republic of Congo" ~ "Democratic Republic of the Congo",
+    TRUE ~ location
+    
+  )) %>%
+  distinct() %>% 
+  select(continent, location, date, total_cases) 
+
+covid_country <- covid_data_general %>% 
+  
+  filter(location == c("Germany" , "UK", "France" , "Spain", "USA", "Turkey") ) %>% 
+  select(location, date, total_cases) 
+
+
+covid_country %>%
+  
+  ggplot(aes(x = date, y= total_cases, fill = location, color = location)) +
+  
+  geom_line(size = 1, linetype = 1) +
+  
+  theme_minimal() +
+  
+  theme(
+    axis.text.x = element_text(
+      angle = 60,
+      hjust = 1 
+    ),
+    panel.background = element_rect(fill = "transparent"), 
+    plot.background = element_rect(fill = "transparent", color = NA), 
+    legend.background = element_rect(fill = "transparent"), 
+    legend.box.background = element_rect(fill = "transparent"), 
+    legend.key = element_rect(fill = "transparent", colour = NA), 
+    axis.line = element_line(colour = "black")
+  ) +
+  
+   geom_label(aes(x =date, y = total_cases, label=total_cases),
+             fill  = "blue",
+             color = "white",
+             fontface = "italic",
+             vjust = 0,
+             hjust = 0.6,
+             size  = 2.5,
+             data = covid_country %>%
+               filter(location %in% c("USA")) %>% 
+               filter(total_cases == max(total_cases))
+            )+
+  
+  scale_x_date(labels = date_format("%B/%y"),breaks = date_breaks("months"))+
+  scale_y_continuous(breaks = seq(0, 9e+07, by = 20000000), 
+                     labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
+  
+  
+  labs(
+    title = "COVID-19 Confirmed Cases Worldwide",
+    subtitle = "Cases for Selected Countries",
+    y = "Cumulative Cases",
+    x= "Between 2020-2022",
+    color = "Countries",
+  )
+
+
+## Challenge 2 ----
+
+world <- map_data("world")
+
+
+covid_death_data <- covid_data_tbl %>% 
+  
+  mutate(location = case_when(
+    
+    location == "United Kingdom" ~ "UK",
+    location == "United States" ~ "USA",
+    location == "Democratic Republic of Congo" ~ "Democratic Republic of the Congo",
+    TRUE ~ location
+    
+  )) %>%
+  
+  select(location, date, total_deaths,population) %>%
+  filter(date == "2022-04-26") %>% 
+  select(-date)
+
+
+covid_death_data <- covid_death_data %>% 
+  
+  
+  left_join(y=world, by = c("location" = "region")) %>% 
+  mutate(mortality_rate = total_deaths*100/population) %>% 
+  select(-total_deaths,-population) 
+
+
+##Data Visualization
+
+covid_death_data %>% ggplot(aes(long, lat)) +
+  
+  
+  geom_map(aes(map_id = location, fill = `mortality_rate`),  map=world, color = "black") +
+  
+  
+  scale_fill_gradient(
+    low = "yellowgreen",
+    high = "red",
+    labels = scales::percent,
+    na.value = "grey"
+  )+
+  
+  
+  labs(
+    title = "Confirmed COVID-19 deaths relative to the size of the population",
+    subtitle = "Around 6.2 million Confirmed COVID-19 deaths worldwide",
+    caption = str_glue("Date: 26/04/2022"),
+    color = "mortality_rate"
+  )+
+  
+  
+  theme(
+    panel.background = element_rect(fill = "transparent"),
+    plot.background = element_rect(fill = "transparent", color = NA), 
+    legend.background = element_rect(fill = "transparent"), 
+    legend.box.background = element_rect(fill = "transparent"), 
+    legend.key = element_rect(fill = "transparent", colour = NA), # get rid of key legend fill, and of the surrounding
+  ) 
+
+  
+
+```
